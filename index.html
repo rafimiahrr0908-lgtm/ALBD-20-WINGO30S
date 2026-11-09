@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALPHA DEVELOPER ASM - Wingo 30S Hack</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; width: 100%; font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #060913; color: #e0f0ff; overflow: hidden;
+        }
+
+        /* Fullscreen DKWIN background iframe */
+        #mainApp { width: 100%; height: 100%; position: relative; display: none; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* Draggable Cyberpunk Mini Hack Widget - Compact Size */
+        #hackWidget {
+            position: absolute; top: 70px; left: 20px; width: 290px;
+            background: linear-gradient(135deg, rgba(3, 20, 35, 0.94) 0%, rgba(2, 10, 20, 0.96) 100%);
+            border: 2px solid #00ffff; border-radius: 18px;
+            box-shadow: 0 0 22px rgba(0, 255, 255, 0.4), inset 0 0 15px rgba(0, 255, 255, 0.15);
+            z-index: 9999; user-select: none; touch-action: none;
+            backdrop-filter: blur(12px); padding: 10px;
+        }
+
+        /* Widget Header */
+        .widget-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 2px 4px 8px 4px; border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            cursor: grab; font-weight: 900; font-size: 11px; color: #00ffff;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.8); letter-spacing: 0.5px;
+        }
+        .widget-header:active { cursor: grabbing; }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 9px; font-weight: bold; color: #00ffff; padding: 6px 2px;
+        }
+        .status-bar .live-dot {
+            width: 6px; height: 6px; background: #00ff66; border-radius: 50%;
+            display: inline-block; box-shadow: 0 0 6px #00ff66; margin-right: 3px;
+        }
+
+        /* Signal Section (Slanted Badge + Number Orb) */
+        .signal-container {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0, 15, 30, 0.6); border: 1px solid rgba(0, 255, 255, 0.35);
+            border-radius: 14px; padding: 10px; margin: 4px 0;
+            box-shadow: inset 0 0 12px rgba(0, 255, 255, 0.1);
+        }
+
+        /* Slanted Pill Badge for BIG / SMALL */
+        .slanted-pill {
+            background: linear-gradient(135deg, #0b1a2d 0%, #153254 100%);
+            border: 2px solid #00ffff; border-radius: 12px;
+            padding: 8px 14px; transform: skewX(-6deg);
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .slanted-pill span {
+            transform: skewX(6deg); font-size: 22px; font-weight: 900;
+            letter-spacing: 2px; color: #ffffff;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+        }
+
+        /* Glowing Number Orb on the right */
+        .number-orb-wrap {
+            position: relative; width: 52px; height: 52px;
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle, rgba(0,255,255,0.2) 0%, rgba(138,43,226,0.3) 100%);
+            border-radius: 50%; border: 2px solid #00ffff;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.5), inset 0 0 8px rgba(0, 255, 255, 0.3);
+        }
+        .number-orb-inner {
+            width: 38px; height: 38px; background: #050b14; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 900; color: #ccff00;
+            box-shadow: 0 0 8px rgba(204, 255, 0, 0.8);
+            border: 1px solid #ccff00;
+        }
+
+        /* Period & Countdown Row */
+        .period-row {
+            text-align: center; margin: 6px 0; font-size: 11px; font-weight: 800;
+            color: #e0f0ff; letter-spacing: 1px; display: flex; justify-content: center; align-items: center; gap: 5px;
+        }
+        .period-row span.brackets { color: #00ffff; font-size: 12px; }
+        .countdown-text { font-size: 9px; color: #ccff00; text-align: center; margin-bottom: 4px; font-weight: bold; }
+
+        /* Action Buttons Row (AGAIN & HIDE) */
+        .btn-row { display: flex; gap: 6px; margin-bottom: 6px; }
+        .cyber-action-btn {
+            flex: 1; padding: 8px 0; background: linear-gradient(90deg, rgba(0,120,200,0.6), rgba(0,255,255,0.4));
+            border: 1.5px solid #00ffff; border-radius: 20px; color: #ffffff; font-weight: 800; font-size: 10px;
+            cursor: pointer; text-transform: uppercase; text-align: center;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none;
+        }
+        .cyber-action-btn:hover { background: rgba(0, 255, 255, 0.3); transform: scale(1.02); }
+
+        /* JOIN NOW Bottom Button */
+        .join-now-btn {
+            width: 100%; padding: 9px 0; background: linear-gradient(90deg, #00ffff, #8a2be2);
+            border: 1.5px solid #00ffff; border-radius: 20px; color: #050b14; font-weight: 900; font-size: 11px;
+            cursor: pointer; text-transform: uppercase; text-align: center; text-decoration: none;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); display: block; letter-spacing: 1px; transition: 0.2s;
+        }
+        .join-now-btn:hover { opacity: 0.95; transform: scale(1.02); }
+
+        /* Password Login Overlay Inside Widget */
+        #passwordOverlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 10, 20, 0.98); backdrop-filter: blur(15px);
+            border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 15px; z-index: 10000; text-align: center;
+        }
+        #passwordOverlay h3 { color: #00ffff; font-size: 13px; margin-bottom: 4px; letter-spacing: 0.5px; }
+        #passwordOverlay p { font-size: 9px; color: #8ab4f8; margin-bottom: 10px; }
+        .pass-input {
+            width: 100%; padding: 8px; background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 255, 0.6); border-radius: 8px;
+            color: #fff; font-size: 12px; text-align: center; margin-bottom: 8px; outline: none; letter-spacing: 2px;
+        }
+        .pass-btn {
+            width: 100%; padding: 8px; background: linear-gradient(90deg, #00ffff, #8a2be2);
+            border: none; border-radius: 8px; color: #050b14; font-weight: 900; font-size: 11px; cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        .pass-error { color: #ff2a5e; font-size: 9px; margin-top: 6px; display: none; }
+
+        /* Server Offline Maintenance Overlay */
+        #maintenanceOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 10, 0.95); display: none; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 99999; text-align: center; padding: 20px;
+        }
+        #maintenanceOverlay h2 { color: #ff3333; font-size: 24px; margin-bottom: 10px; text-shadow: 0 0 15px #ff3333; }
+        #maintenanceOverlay p { color: #8ab4f8; font-size: 13px; }
+
+        /* Floating Ball when Minimized */
+        #floatingBall {
+            position: fixed; bottom: 25px; right: 25px; width: 50px; height: 50px;
+            background: radial-gradient(circle, #00ffff 0%, #8a2be2 100%);
+            border-radius: 50%; display: none; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px rgba(0,255,255,0.9); cursor: pointer; z-index: 99999;
+            font-size: 22px; animation: pulseBall 1.5s infinite;
+        }
+        @keyframes pulseBall {
+            0% { transform: scale(1); box-shadow: 0 0 12px rgba(0,255,255,0.6); }
+            50% { transform: scale(1.12); box-shadow: 0 0 25px rgba(0,255,255,1); }
+            100% { transform: scale(1); box-shadow: 0 0 12px rgba(0,255,255,0.6); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Server Maintenance Screen -->
+    <div id="maintenanceOverlay">
+        <h2>⚠️ SERVER OFFLINE / MAINTENANCE</h2>
+        <p>Admin has temporarily turned off the server. Please try again later.</p>
+    </div>
+
+    <div id="mainApp">
+        <!-- DKWIN registration iframe with updated link and invitation code -->
+        <iframe src="https://dkwin1.com/#/register?invitationCode=518181607305"></iframe>
+
+        <!-- DRAGGABLE MINI HACK WIDGET -->
+        <div id="hackWidget">
+            <!-- Password Protection Overlay -->
+            <div id="passwordOverlay">
+                <h3>『 ALPHA DEVELOPER ASM 』</h3>
+                <p>ENTER PASSWORD FROM ADMIN PANEL</p>
+                <input type="password" id="passInput" class="pass-input" placeholder="ENTER PASSWORD">
+                <button class="pass-btn" onclick="verifyPassword()">UNLOCK PANEL</button>
+                <div id="passError" class="pass-error">❌ Invalid or Expired Password!</div>
+            </div>
+
+            <!-- Widget Header -->
+            <div class="widget-header" id="widgetHeader">
+                <span>『 ALPHA DEVELOPER ASM 』</span>
+                <span id="headerTimer" style="color: #ccff00;">00:30</span>
+            </div>
+
+            <div class="widget-body">
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <div><span class="live-dot"></span>LIVE</div>
+                    <div>MOD : ON</div>
+                    <div>PING : 12MS</div>
+                </div>
+
+                <!-- Signal Display (Slanted Big/Small + Number Orb) -->
+                <div class="signal-container">
+                    <div class="slanted-pill">
+                        <span id="predText">BIG</span>
+                    </div>
+                    <div class="number-orb-wrap">
+                        <div id="numberOrb" class="number-orb-inner">5</div>
+                    </div>
+                </div>
+
+                <!-- Countdown seconds display -->
+                <div id="countdownSeconds" class="countdown-text">13 S</div>
+
+                <!-- Period Display -->
+                <div class="period-row">
+                    <span class="brackets">⟨⟨</span>
+                    <span id="periodDisplay">PERIOD : ---</span>
+                    <span class="brackets">⟩⟩</span>
+                </div>
+
+                <!-- Buttons Row -->
+                <div class="btn-row">
+                    <button class="cyber-action-btn" onclick="forceRefresh()">
+                        <span>↺</span> AGAIN
+                    </button>
+                    <button class="cyber-action-btn" onclick="hideWidget()">
+                        <span>👁️</span> HIDE
+                    </button>
+                </div>
+
+                <!-- Join Now Telegram Button -->
+                <a href="https://t.me/paymentusdt00" target="_blank" class="join-now-btn">
+                    » 🕷️ JOIN NOW «
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Ball when Minimized -->
+    <div id="floatingBall" onclick="showWidget()" title="Open Hack">⚡</div>
+
+<script>
+    const DB_URL = "https://wingo30s1-default-rtdb.firebaseio.com/";
+    const userId = "user_" + Math.random().toString(36).substring(2, 9);
+
+    window.onload = () => {
+        checkServerState();
+        setInterval(checkServerState, 3000);
+        setInterval(sendHeartbeat, 10000);
+    };
+
+    async function checkServerState() {
+        try {
+            const res = await fetch(`${DB_URL}/serverStatus.json`);
+            let state = await res.json();
+            if(state === false) {
+                document.getElementById('maintenanceOverlay').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+            } else {
+                document.getElementById('maintenanceOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+            }
+        } catch(e){}
+    }
+
+    async function sendHeartbeat() {
+        try {
+            await fetch(`${DB_URL}/liveUsers/${userId}.json`, {
+                method: 'PUT',
+                body: JSON.stringify(Date.now())
+            });
+        } catch(e){}
+    }
+
+    async function verifyPassword() {
+        const inputPass = document.getElementById('passInput').value.trim();
+        if(!inputPass) return;
+
+        try {
+            // 1. Check Main Password
+            const resMain = await fetch(`${DB_URL}/mainPassword.json`);
+            const mainPass = await resMain.json();
+            if(mainPass && inputPass === mainPass) {
+                unlockSuccess();
+                return;
+            }
+
+            // 2. Check Temp Password
+            const resTemp = await fetch(`${DB_URL}/tempPasswords/${inputPass}.json`);
+            const tempObj = await resTemp.json();
+            
+            if(tempObj && tempObj.expiresAt && Date.now() < tempObj.expiresAt) {
+                unlockSuccess();
+            } else {
+                document.getElementById('passError').style.display = 'block';
+            }
+        } catch(e) {
+            document.getElementById('passError').style.display = 'block';
+        }
+    }
+
+    function unlockSuccess() {
+        document.getElementById('passwordOverlay').style.display = 'none';
+        startEngine();
+    }
+
+    document.getElementById('passInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') verifyPassword();
+    });
+
+    const widget = document.getElementById('hackWidget');
+    const header = document.getElementById('widgetHeader');
+    let isDragging = false, startX, startY, initialX, initialY;
+
+    header.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    header.addEventListener('touchstart', dragStart, {passive: false});
+    document.addEventListener('touchmove', drag, {passive: false});
+    document.addEventListener('touchend', dragEnd);
+
+    function dragStart(e) {
+        isDragging = true;
+        startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+        startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        initialX = widget.offsetLeft;
+        initialY = widget.offsetTop;
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        let currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+        let currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+        widget.style.left = (initialX + (currentX - startX)) + 'px';
+        widget.style.top = (initialY + (currentY - startY)) + 'px';
+    }
+
+    function dragEnd() { isDragging = false; }
+
+    function hideWidget() {
+        widget.style.display = 'none';
+        document.getElementById('floatingBall').style.display = 'flex';
+    }
+
+    function showWidget() {
+        document.getElementById('floatingBall').style.display = 'none';
+        widget.style.display = 'block';
+    }
+
+    const API = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json";
+    let lastProcessedPeriod = null;
+
+    function startEngine() {
+        updateClock();
+        fetchSignal();
+        setInterval(updateClock, 1000);
+        setInterval(fetchSignal, 2000);
+    }
+
+    function updateClock() {
+        let sec = new Date().getSeconds();
+        let rem = 30 - (sec % 30);
+        if (rem === 30) rem = 0;
+        
+        let formatted = `00:${rem < 10 ? '0' + rem : rem}`;
+        document.getElementById('headerTimer').innerText = formatted;
+        document.getElementById('headerTimer').style.color = rem <= 5 ? "#ff10f0" : "#ccff00";
+        document.getElementById('countdownSeconds').innerText = rem + " S";
+    }
+
+    async function fetchSignal() {
+        try {
+            const res = await fetch(API + '?t=' + Date.now());
+            const data = await res.json();
+            const topItem = data.data.list[0];
+            processPrediction(topItem.issueNumber, data.data.list);
+        } catch (err) {}
+    }
+
+    function forceRefresh() {
+        fetchSignal();
+    }
+
+    function processPrediction(currentIssue, list) {
+        if (lastProcessedPeriod !== currentIssue) {
+            lastProcessedPeriod = currentIssue;
+            let nextPeriod = (BigInt(currentIssue) + 1n).toString();
+            
+            const last5 = list.slice(0, 5).map(x => parseInt(x.number) >= 5 ? "BIG" : "SMALL");
+            const lastNums = list.slice(0, 5).map(x => parseInt(x.number));
+            
+            let predicted = (last5[0] === last5[1] && last5[1] === last5[2]) ? last5[0] : (last5[0] === "BIG" ? "SMALL" : "BIG");
+            let sum = lastNums.reduce((a, b) => a + b, 0);
+            
+            let targetNum;
+            if (predicted === "BIG") {
+                let bigNums = [5, 6, 7, 8, 9];
+                targetNum = bigNums[sum % bigNums.length];
+            } else {
+                let smallNums = [0, 1, 2, 3, 4];
+                targetNum = smallNums[sum % smallNums.length];
+            }
+            
+            document.getElementById('periodDisplay').innerText = "PERIOD : " + nextPeriod.slice(-4);
+            document.getElementById('predText').innerText = predicted;
+            document.getElementById('predText').style.color = predicted === "BIG" ? "#00ffff" : "#ccff00";
+            document.getElementById('numberOrb').innerText = targetNum;
+        }
+    }
+</script>
+</body>
+</html>
